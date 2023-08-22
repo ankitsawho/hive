@@ -15,6 +15,18 @@ const config = {
     // Feel free to reconfigure them to your own preference.
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/no-unsafe-assignment": 'off',
+    "@typescript-eslint/ban-ts-comment": 'off',
+    "@typescript-eslint/prefer-optional-chain": 'off',
+    "@typescript-eslint/await-thenable": 'off',
+    "@typescript-eslint/require-await": 'off',
+    "@typescript-eslint/no-floating-promises": 'off',
+    "@typescript-eslint/no-unsafe-member-access": 'off',
+    "@typescript-eslint/no-explicit-any": 'off',
+    "@typescript-eslint/no-empty-interface": 'off',
+    "@typescript-eslint/no-unsafe-call": 'off',
+    
+
 
     "@typescript-eslint/consistent-type-imports": [
       "warn",

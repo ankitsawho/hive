@@ -61,7 +61,7 @@ export default function Home() {
 const ComboboxDemo = () => {
   const [open, setOpen] = useState<boolean>(false)
   const [value, setValue] = useState<string>("")
-  let clubList = (api.club.getClubList.useQuery()).data
+  const clubList = (api.club.getClubList.useQuery()).data
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -104,7 +104,7 @@ const ComboboxDemo = () => {
 
 const ClubListSidebar = () => {
   const { data: session } = useSession()
-  let clubList = (api.club.getClubList.useQuery()).data
+  const clubList = (api.club.getClubList.useQuery()).data
   if (!session?.user) return null
   return <ScrollArea className="h-72 w-full rounded-md border hidden md:block">
     <div className="p-4">

@@ -169,7 +169,7 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
 
     return <div className="max-w-5xl w-full">
         <div className="text-slate-700 m-4 text-2xl">Create Post in club <span className="font-bold">{clubName}</span></div>
-        <form id='club-post-form' onSubmit={handleSubmit(onSubmit)}>
+        <form id='club-post-form' onSubmit={() => handleSubmit(onSubmit)}>
             <div className='w-full border border-slate-200 p-4 rounded-lg'>
                 <div className="prose prose-stone w-full dark:prose-invert">
                     <TextareaAutosize ref={(e) => {

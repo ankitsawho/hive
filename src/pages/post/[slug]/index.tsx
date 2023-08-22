@@ -77,7 +77,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     }
 }
 
-export async function getStaticProps(context: GetStaticPropsContext<{ slug: string }>) {
+export function getStaticProps(context: GetStaticPropsContext<{ slug: string }>) {
     const slug = context.params?.slug
     if (slug == null) {
         return {

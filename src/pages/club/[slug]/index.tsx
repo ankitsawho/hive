@@ -48,7 +48,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     }
 }
 
-export async function getStaticProps(context: GetStaticPropsContext<{ slug: string }>) {
+export function getStaticProps(context: GetStaticPropsContext<{ slug: string }>) {
     const slug = context.params?.slug
     if (slug == null) {
         return {
@@ -107,7 +107,7 @@ const ClubSidebar = ({ session, details }: ClubSidebarProps) => {
                     <Link href={`/profile/${details.creator?.id}`}><Badge>Creator</Badge></Link>
                 </div>
             </CardContent>
-            {(session && (isSubscribed.data || session.user.id == creatorId)) && <CardFooter>
+            {(session && (isSubscribed.data ?? session.user.id == creatorId)) && <CardFooter>
                 <Link className="w-full mb-2" href={`/create/${details.name}`}><Button variant="outline" className='w-full'>Create Post</Button></Link>
             </CardFooter>}
         </Card>

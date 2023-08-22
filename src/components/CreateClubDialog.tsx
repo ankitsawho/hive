@@ -24,12 +24,12 @@ const CreateClubDialog = () => {
     const router = useRouter()
 
     const createClub = api.club.create.useMutation({
-        onSuccess: (newClub) => {
+        onSuccess: async () => {
             toast({
                 title: "Success",
                 description: "Club created",
             })
-            router.push(`/club/${clubName}`)
+            await router.push(`/club/${clubName}`)
         },
         onError: (error) => {
             if (error.data?.httpStatus == 400) {
@@ -52,7 +52,7 @@ const CreateClubDialog = () => {
         },
     })
 
-    const handleCreateClub = async () => {
+    const handleCreateClub = () => {
         if (clubName.length < 3) return
         setIsLoading(true)
         createClub.mutate({ name: clubName, description: clubDesc })
