@@ -149,7 +149,7 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
                     <div id='editor' className='min-h-[300px] w-full mx-4' />
                 </div>
             </div>
-            {isLoading ? <LoadingSpinner /> : <Button className='mt-2 w-full' form='club-post-form' type='button' onClick={submitPost}>Create Post</Button>}
+            {isLoading ? <LoadingSpinner /> : <Button className='mt-2 w-full' form='club-post-form' type='button' onClick={() => void submitPost()}>Create Post</Button>}
         </form>
     </div>
 }
