@@ -107,7 +107,7 @@ const ClubSidebar = ({ session, details }: ClubSidebarProps) => {
                     <Link href={`/profile/${details.creator?.id}`}><Badge>Creator</Badge></Link>
                 </div>
             </CardContent>
-            {(session && (isSubscribed.data ?? session.user.id == creatorId)) && <CardFooter>
+            {(session?.user && (session.user.id == creatorId || isSubscribed.data)) && <CardFooter>
                 <Link className="w-full mb-2" href={`/create/${details.name}`}><Button variant="outline" className='w-full'>Create Post</Button></Link>
             </CardFooter>}
         </Card>

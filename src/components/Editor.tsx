@@ -1,9 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize'
-import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type EditorJs from '@editorjs/editorjs'
+import type EditorJsType from '@editorjs/editorjs'
 import { uploadFiles } from '~/utils/uploadthing'
 import { Button } from './ui/button'
 import { toast } from './ui/use-toast'
@@ -22,26 +20,18 @@ const PostValidator = z.object({
     content: z.any()
 })
 
-type FormData = z.infer<typeof PostValidator>
 type PostCreationRequest = z.infer<typeof PostValidator>
 
 const Editor = ({ clubName, clubId }: EditorProps) => {
-    const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-        resolver: zodResolver(PostValidator),
-        defaultValues: {
-            title: '',
-            content: null,
-            clubId
-        }
-    })
 
-    const ref = useRef<EditorJs>()
-    const _titleRef = useRef<HTMLTextAreaElement>(null)
+    const [title, setTitle] = useState("")
+    const ref = useRef<EditorJsType>()
     const [isMounted, setIsMounted] = useState<boolean>(false)
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const createPost = api.post.create.useMutation({
         onSuccess: () => {
+            console.log("Success");
             router.push(`/club/${clubName}`)
         },
         onError: (error) => {
@@ -51,27 +41,6 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
             })
         }
     })
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setIsMounted(true)
-        }
-    }, [])
-
-    useEffect(() => {
-        console.log("ERROR", errors);
-
-        if (Object.keys(errors).length) {
-            for (const [_key, value] of Object.entries(errors)) {
-                toast({
-                    title: 'Something went wrong',
-                    description: (value as { message: string }).message
-                })
-            }
-        }
-    }, [errors])
-
-
 
     const initializeEditor = useCallback(async () => {
         const EditorJS = (await import("@editorjs/editorjs")).default  //@ts-ignore
@@ -95,7 +64,6 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
                 data: { blocks: [] },
                 tools: {
                     header: Header,
-                    // TODO: FIX URL
                     linkTool: {
                         class: LinkTool,
                         config: {
@@ -105,16 +73,14 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
                     image: {
                         class: ImageTool,
                         config: {
-                            async uploadByFile(file: File) {
-                                const res = await uploadFiles({
-                                    files: [file],
-                                    endpoint: "imageUploader",
-                                });
-                                //TODO: FIX Image upload
-                                return {
-                                    success: 1,
-                                    file: {
-                                        url: 'https://codex.so/upload/redactor_images/o_e48549d1855c7fc1807308dd14990126.jpg',
+                            uploader: {
+                                async uploadByFile(file: File) {
+                                    const [res] = await uploadFiles({ endpoint: 'imageUploader', files: [file] })
+                                    return {
+                                        success: 1,
+                                        file: {
+                                            url: res?.url,
+                                        }
                                     }
                                 }
                             }
@@ -131,12 +97,15 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
     }, [])
 
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setIsMounted(true)
+        }
+    }, [])
+
+
+    useEffect(() => {
         const init = async () => {
             await initializeEditor()
-            setTimeout(() => {
-                // set focus to title
-                _titleRef.current?.focus()
-            }, 0)
         }
         if (isMounted) {
             init()
@@ -151,10 +120,16 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
         return null
     }
 
-    const onSubmit = async (data: FormData) => {
+    const submitPost = async () => {
         setIsLoading(true)
+        if (title.length < 3) {
+            toast({
+                title: "Title can't be empty"
+            })
+            setIsLoading(false)
+            return
+        }
         const blocks = await ref.current?.save()
-        const title = data.title
         const payload: PostCreationRequest = {
             title,
             content: blocks,
@@ -164,26 +139,17 @@ const Editor = ({ clubName, clubId }: EditorProps) => {
         setIsLoading(false)
     }
 
-    const { ref: titleRef, ...rest } = register('title')
-
 
     return <div className="max-w-5xl w-full">
         <div className="text-slate-700 m-4 text-2xl">Create Post in club <span className="font-bold">{clubName}</span></div>
-        <form id='club-post-form' onSubmit={() => handleSubmit(onSubmit)}>
+        <form id='club-post-form'>
             <div className='w-full border border-slate-200 p-4 rounded-lg'>
                 <div className="prose prose-stone w-full dark:prose-invert">
-                    <TextareaAutosize ref={(e) => {
-                        titleRef(e)
-                        // @ts-ignore
-                        _titleRef.current = e
-                    }} {...rest} placeholder='Title' className='w-full mx-4 resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none' />
+                    <TextareaAutosize onChange={(e) => setTitle(e.target.value)} placeholder='Title' className='w-full mx-4 resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none' />
                     <div id='editor' className='min-h-[300px] w-full mx-4' />
                 </div>
             </div>
-            {isLoading ? <LoadingSpinner /> : <Button className='mt-2 w-full' onClick={() => {
-                console.log(rest);
-                console.log()
-            }} form='club-post-form' type='submit'>Create Post</Button>}
+            {isLoading ? <LoadingSpinner /> : <Button className='mt-2 w-full' form='club-post-form' type='button' onClick={submitPost}>Create Post</Button>}
         </form>
     </div>
 }

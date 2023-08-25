@@ -29,7 +29,6 @@ model Account {
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([provider, providerAccountId])
-    @@index([userId])
 }
 
 model Session {
@@ -38,8 +37,6 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    @@index([userId])
 }
 
 model User {
@@ -72,9 +69,6 @@ model Club {
     creatorId   String?
     creator     User?          @relation("CreatedBy", fields: [creatorId], references: [id])
     subscribers Subscription[]
-
-    @@index([name])
-    @@index([creatorId])
 }
 
 model Subscription {
@@ -84,8 +78,6 @@ model Subscription {
     clubId String
 
     @@id([userId, clubId])
-    @@index([userId])
-    @@index([clubId])
 }
 
 model Post {
@@ -102,8 +94,6 @@ model Post {
     votes     Vote[]
 
     @@unique([createdAt, id])
-    @@index([clubId])
-    @@index([authorId])
 }
 
 model Comment {
@@ -123,9 +113,6 @@ model Comment {
     commentId String?
 
     @@unique([createdAt, id])
-    @@index([postId])
-    @@index([authorId])
-    @@index([replyToId])
 }
 
 model Vote {
@@ -136,8 +123,6 @@ model Vote {
     type   VoteType
 
     @@id([userId, postId])
-    @@index([postId])
-    @@index([userId])
 }
 
 model CommentVote {
@@ -148,6 +133,4 @@ model CommentVote {
     type      VoteType
 
     @@id([userId, commentId])
-    @@index([userId])
-    @@index([commentId])
 }
