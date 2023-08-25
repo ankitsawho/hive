@@ -23,9 +23,16 @@ import InfinitePostList from "~/components/InfinitePostList";
 
 export default function Home() {
   const { data: session } = useSession()
-  const posts = api.post.getInfinitePostsUserFeed.useInfiniteQuery({}, {
-    getNextPageParam: (lastPage) => lastPage.nextCursor
-  })
+  let posts
+  if (session?.user) {
+    posts = api.post.getInfinitePostsUserFeed.useInfiniteQuery({}, {
+      getNextPageParam: (lastPage) => lastPage.nextCursor
+    })
+  } else {
+    posts = api.club.getInfinitePostsOfClub.useInfiniteQuery({ name: "hive" }, {
+      getNextPageParam: (lastPage) => lastPage.nextCursor
+    })
+  }
 
   return (
     <>
@@ -44,7 +51,7 @@ export default function Home() {
           <Card className="max-w-xs hidden md:block w-full">
             <CardHeader>
               <CardTitle className="flex gap-2 items-center"><HomeIcon /><p>Home</p></CardTitle>
-              <CardDescription>Your personal Hive frontpage. Come here to check in with your favorite clubs.</CardDescription>
+              <CardDescription>{session?.user ? "Your personal Hive frontpage. Come here to check in with your favorite clubs." : "Welcome the hive. A place to connect with others who share your interests, create and join clubs, post, vote and discuss, and learn and grow."}</CardDescription>
             </CardHeader>
             {session != null && <CardContent>
               <ComboboxDemo />

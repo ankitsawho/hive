@@ -29,7 +29,7 @@ const Navbar: FC = () => {
                 <p className='font-bold text-lg'>Hive</p>
             </div>
         </Link>
-        <SearchBar />
+        {sessionData?.user && <SearchBar />}
         {
             (user == null) ? <Button onClick={() => {
                 signIn()
