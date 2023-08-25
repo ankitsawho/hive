@@ -102,8 +102,8 @@ type PostCommentAreaProps = {
 const PostCommentArea = ({ postId }: PostCommentAreaProps) => {
     const trpcUtils = api.useContext()
     const { data: session } = useSession()
-    if (!session?.user) return null
     const [commentText, setCommentText] = useState("")
+    if (!session?.user) return null
     const createComment = api.comment.createCommentOnPost.useMutation({
         onSuccess: (newComment) => {
             setCommentText("")
