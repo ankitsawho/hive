@@ -130,7 +130,7 @@ export const CommentInteractions = ({ postId, commentId, initialVotesCount, init
                     <button className="text-slate-600" onClick={handleDownVote}>{vote === 'DOWN' ? <BiSolidDownvote className=" text-red-400" size={22} /> : <BiDownvote size={22} />}</button>
                 </div>
                 <span className="text-sm text-slate-600 font-bold">{voteCount}{" "}{getPlural(voteCount, "Vote", "Votes")}</span>
-                <Button variant="ghost" onClick={() => setIsReplying(prev => !isReplying)} className="flex items-center space-x-1"><RiReplyLine size={20} /><span>Reply</span></Button>
+                <Button variant="ghost" onClick={() => setIsReplying(prev => !prev)} className="flex items-center space-x-1"><RiReplyLine size={20} /><span>Reply</span></Button>
             </div>
                 :
                 <div className="flex justify-center items-center space-x-1">
