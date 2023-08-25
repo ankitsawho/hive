@@ -101,7 +101,7 @@ export const PostInteractions = ({ postId, commentCount, initialVotesCount, init
     const ICON_SIZE = newPage ? 32 : 22
     return <div className="flex items-center justify-between w-full">
         {session ? <div className="flex justify-center items-center space-x-1">
-            <div className="flex flex-col">
+            <div className="flex items-center">
                 <button className="text-slate-600" onClick={handleUpVote}>{vote === 'UP' ? <BiSolidUpvote className=" text-blue-400" size={ICON_SIZE} /> : <BiUpvote size={ICON_SIZE} />}</button>
                 <button className="text-slate-600" onClick={handleDownVote}>{vote === 'DOWN' ? <BiSolidDownvote className=" text-red-400" size={ICON_SIZE} /> : <BiDownvote size={ICON_SIZE} />}</button></div>
             <span className="text-sm text-slate-600 font-bold">{voteCount}{"  "}{newPage && getPlural(voteCount, "Vote", "Votes")}</span>

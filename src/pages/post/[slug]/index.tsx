@@ -1,9 +1,11 @@
+import type { VoteType } from "@prisma/client"
 import { GetStaticPaths, GetStaticPropsContext, InferGetStaticPropsType, NextPage } from "next"
 import { useSession } from "next-auth/react"
 import Head from "next/head"
 import Link from "next/link"
 import { FormEvent, useRef, useState } from "react"
 import InfiniteScroll from "react-infinite-scroll-component"
+import { CommentInteractions } from "~/components/CommentInteractions"
 import { EditorOutput } from "~/components/EditorOutput"
 import { LoadingSpinner } from "~/components/LoadingSpinner"
 import { PostInteractions } from "~/components/PostInteractions"
@@ -149,7 +151,7 @@ const PostCommentArea = ({ postId }: PostCommentAreaProps) => {
             <p className="text-sm text-muted-foreground">
                 Please be respectful.
             </p>
-            <Button className="w-fit">Submit</Button>
+            {commentText.length > 0 && <Button className="w-fit">Submit</Button>}
         </div>
     </form>
 }
@@ -160,7 +162,7 @@ type CommentSectionProps = {
 
 const CommentSection = ({ postId }: CommentSectionProps) => {
     const comments = api.comment.getInfiniteComment.useInfiniteQuery({ postId }, { getNextPageParam: lastPage => lastPage.nextCursor })
-    return <InfiniteCommentList comments={comments.data?.pages.flatMap(page => page.comments)} isError={comments.isError} isLoading={comments.isLoading} hasMore={comments.hasNextPage} fetchNewComments={comments.fetchNextPage} />
+    return <InfiniteCommentList postId={postId} comments={comments.data?.pages.flatMap(page => page.comments)} isError={comments.isError} isLoading={comments.isLoading} hasMore={comments.hasNextPage} fetchNewComments={comments.fetchNextPage} />
 }
 
 type Comment = {
@@ -168,6 +170,7 @@ type Comment = {
     text: string
     createdAt: Date
     author: { id: string, image: string | null, name: string | null }
+    votes: { userId: string; commentId: string; type: VoteType; }[]
 }
 
 type InfiniteCommentListProps = {
@@ -176,11 +179,12 @@ type InfiniteCommentListProps = {
     hasMore: boolean | undefined
     fetchNewComments: () => Promise<unknown>
     comments?: Comment[]
+    postId: string
 }
 
 
 
-export const InfiniteCommentList = ({ comments, isError, isLoading, fetchNewComments, hasMore = false }: InfiniteCommentListProps) => {
+export const InfiniteCommentList = ({ postId, comments, isError, isLoading, fetchNewComments, hasMore = false }: InfiniteCommentListProps) => {
     if (isLoading) return <LoadingSpinner />
     if (isError) return <h1>Error...</h1>
     if (comments == null || comments.length == 0) return <h1 className="flex justify-center p-2 text-slate-400 font-bold">No Comments</h1>
@@ -190,7 +194,7 @@ export const InfiniteCommentList = ({ comments, isError, isLoading, fetchNewComm
             {
                 comments.map(comment => {
                     return (
-                        <CommentCard key={comment.id} {...comment} />
+                        <CommentCard key={comment.id} comment={comment} postId={postId} />
                     )
                 })
             }
@@ -198,7 +202,23 @@ export const InfiniteCommentList = ({ comments, isError, isLoading, fetchNewComm
     </ul>
 }
 
-const CommentCard = ({ id, text, author, createdAt }: Comment) => {
+type CommentCardProps = {
+    comment: Comment
+    postId: string
+}
+
+const CommentCard = ({ comment, postId }: CommentCardProps) => {
+    const { id, text, author, createdAt, votes } = comment
+    const { data: session } = useSession()
+    if (!votes) return null;
+    const votesCount = votes.reduce((acc, vote) => {
+        if (vote.type === 'UP') return acc + 1
+        if (vote.type === 'DOWN') return acc - 1
+        return acc
+    }, 0)
+    const currentVote = votes.find(
+        (vote) => vote.userId === session?.user.id
+    )
     return <div className="mx-10 mb-6">
         <div className="flex items-center">
             <Avatar>
@@ -208,6 +228,9 @@ const CommentCard = ({ id, text, author, createdAt }: Comment) => {
             <div className="ml-2 text-sm font-semibold text-slate-700"><Link href={`/profile/${author.id}`} className="hover:underline underline-offset-4 cursor-pointer">{author.name}</Link>{" · "}{dateTimeFormatter.format(createdAt)}</div>
         </div>
         <div className="mx-10 my-4 text-md text-slate-600">{text}</div>
+        <div className="mb-5">
+            <CommentInteractions postId={postId} commentId={id} initialVotesCount={votesCount} initialVote={currentVote?.type} />
+        </div>
         <Separator />
     </div>
 }

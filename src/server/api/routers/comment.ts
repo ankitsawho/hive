@@ -1,4 +1,3 @@
-import { text } from "stream/consumers";
 import { z } from "zod";
 import {
     createTRPCRouter,
@@ -15,7 +14,6 @@ export const commentRouter = createTRPCRouter({
 
     getInfiniteComment: publicProcedure.input(z.object({ postId: z.string(), limit: z.number().optional(), cursor: z.object({ id: z.string(), createdAt: z.date() }).optional() }))
         .query(async ({ input: { postId, limit = 10, cursor }, ctx }) => {
-            const currentUser = ctx.session?.user
             const comments = await ctx.prisma.comment.findMany({
                 where: {
                     postId
@@ -29,7 +27,8 @@ export const commentRouter = createTRPCRouter({
                     createdAt: true,
                     author: {
                         select: { name: true, id: true, image: true }
-                    }
+                    },
+                    votes: true
                 }
             })
             let nextCursor: typeof cursor | undefined
@@ -40,86 +39,62 @@ export const commentRouter = createTRPCRouter({
                 }
             }
             return {
-                comments: comments.map(post => {
+                comments: comments.map(comment => {
                     return {
-                        id: post.id,
-                        text: post.text,
-                        author: post.author,
-                        createdAt: post.createdAt
+                        id: comment.id,
+                        text: comment.text,
+                        author: comment.author,
+                        createdAt: comment.createdAt,
+                        votes: comment.votes
                     }
                 }), nextCursor
             }
         }),
 
-    commentVote: protectedProcedure.input(z.object({ postId: z.string(), voteType: z.enum(['UP', 'DOWN']) })).mutation(async ({ input: { postId, voteType }, ctx }) => {
-        const currentUser = ctx.session.user
-        const existingVote = await ctx.prisma.vote.findFirst({
-            where: {
-                userId: currentUser.id,
-                postId
-            }
-        })
+    commentVote: protectedProcedure.input(z.object({ commentId: z.string(), voteType: z.enum(['UP', 'DOWN']) }))
+        .mutation(async ({ input: { commentId, voteType }, ctx }) => {
+            const currentUser = ctx.session.user
+            const existingVote = await ctx.prisma.commentVote.findFirst({
+                where: {
+                    userId: currentUser.id,
+                    commentId
+                }
+            })
 
-        const post = await ctx.prisma.post.findUnique({
-            where: {
-                id: postId
-            },
-            include: {
-                author: true,
-                votes: true
-            }
-        })
-
-        if (!post) {
-            return { error: "Post doesn't exists" }
-        }
-
-        if (existingVote) {
-            if (existingVote.type === voteType) {
-                await ctx.prisma.vote.delete({
-                    where: {
-                        userId_postId: {
-                            postId,
-                            userId: currentUser.id
+            if (existingVote) {
+                if (existingVote.type === voteType) {
+                    await ctx.prisma.commentVote.delete({
+                        where: {
+                            userId_commentId: {
+                                commentId,
+                                userId: currentUser.id
+                            }
                         }
-                    }
-                })
-            }
-            else {
-                await ctx.prisma.vote.update({
-                    where: {
-                        userId_postId: {
-                            postId,
-                            userId: currentUser.id
+                    })
+                } else {
+                    await ctx.prisma.commentVote.update({
+                        where: {
+                            userId_commentId: {
+                                commentId,
+                                userId: currentUser.id
+                            }
+                        },
+                        data: {
+                            type: voteType
                         }
-                    },
-                    data: {
-                        type: voteType
-                    }
-                })
+                    })
+                    return { message: "OK" }
+                }
             }
-            const voteCount = post.votes.reduce((acc, vote) => {
-                if (vote.type === 'UP') return acc + 1
-                if (vote.type === 'DOWN') return acc - 1
-                return acc
-            }, 0)
-            return { voteCount }
-        }
-
-        await ctx.prisma.vote.create({
-            data: {
-                type: voteType,
-                userId: currentUser.id,
-                postId,
-            },
-        })
-        const voteCount = post.votes.reduce((acc, vote) => {
-            if (vote.type === 'UP') return acc + 1
-            if (vote.type === 'DOWN') return acc - 1
-            return acc
-        }, 0)
-        return { voteCount }
-    }),
+            await ctx.prisma.commentVote.create({
+                data: {
+                    type: voteType,
+                    userId: currentUser.id,
+                    commentId,
+                },
+            })
+            return { message: "OK" }
+        }),
 
 });
 
